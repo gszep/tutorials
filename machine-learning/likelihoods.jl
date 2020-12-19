@@ -1,21 +1,20 @@
 ### A Pluto.jl notebook ###
-# v0.12.6
+# v0.12.17
 
 using Markdown
 using InteractiveUtils
 
-# This Pluto notebook uses @bind for interactivity. When running this notebook outside of Pluto, the following 'mock version' of @bind gives bound variables a default value (instead of an error).
-macro bind(def, element)
-    quote
-        local el = $(esc(element))
-        global $(esc(def)) = Core.applicable(Base.get, el) ? Base.get(el) : missing
-        el
-    end
-end
-
 # ╔═╡ 102fce2e-13b9-11eb-0da5-ab502c3ea430
 begin 
-	using LaTeXStrings,Plots
+	import Pkg
+	Pkg.activate("..")
+
+	using AbstractPlotting.MakieLayout
+	using WGLMakie,AbstractPlotting
+	
+	using JSServe,JSServe.DOM
+	using LaTeXStrings
+
 	md"""## Optimisation of Likelihood Functions
 	We begin by defining the probability density that will model our data
 	``p(\mathbf{x}|\mathbf{\theta})``. Our data ``\mathcal{D} = \{ X_1 \dots X_k \}`` 
@@ -64,15 +63,47 @@ when ``\theta=X``
 
 # ╔═╡ 24eb8b64-13ca-11eb-0a3b-35fd73614563
 begin
-	plot( size=(400,450), ticks=[], layout=4, legend=false,
-		xlabel=L"\theta_1",ylabel=L"\theta_2",
-		title=[ L"X=(0,1)" L"X=(1,1)" L"X=(0,0)" L"X=(1,0)"])
-
-	contourf!(θrange,θrange, (θ1,θ2) -> model([false,true], [θ1,θ2]), subplots=1 )
-	contourf!(θrange,θrange, (θ1,θ2) -> model([true,true],  [θ1,θ2]), subplots=2 )
-	contourf!(θrange,θrange, (θ1,θ2) -> model([false,false],[θ1,θ2]), subplots=3 )
-	contourf!(θrange,θrange, (θ1,θ2) -> model([true,false], [θ1,θ2]), subplots=4 )
-
+	
+	scene_one, layout_one = layoutscene(resolution = (700,750))
+	
+	ax1 = layout_one[1,1] = LAxis(scene_one, ylabel="θ[2]", xlabel="θ[1]",
+		title="X=(0,1)")
+	
+	heatmap!( ax1, θrange, θrange,
+		[ model([false,true], [θ1,θ2]) for θ1 in θrange, θ2 in θrange],
+		
+		colormap=cgrad(:starrynight, 10, categorical=true),
+		interpolate=true )
+	
+	ax2 = layout_one[1,2] = LAxis(scene_one, ylabel="θ[2]", xlabel="θ[1]",
+		title="X=(1,1)")
+	
+	heatmap!( ax2, θrange, θrange,
+		[ model([true,true], [θ1,θ2]) for θ1 in θrange, θ2 in θrange],
+		
+		colormap=cgrad(:starrynight, 10, categorical=true),
+		interpolate=true )
+	
+	ax3 = layout_one[2,1] = LAxis(scene_one, ylabel="θ[2]", xlabel="θ[1]",
+		title="X=(0,0)")
+	
+	heatmap!( ax3, θrange, θrange,
+		[ model([false,false], [θ1,θ2]) for θ1 in θrange, θ2 in θrange],
+		
+		colormap=cgrad(:starrynight, 10, categorical=true),
+		interpolate=true )
+	
+	ax4 = layout_one[2,2] = LAxis(scene_one, ylabel="θ[2]", xlabel="θ[1]",
+		title="X=(1,0)")
+	
+	heatmap!( ax4, θrange, θrange,
+		[ model([true,false], [θ1,θ2]) for θ1 in θrange, θ2 in θrange],
+		
+		colormap=cgrad(:starrynight, 10, categorical=true),
+		interpolate=true )
+		
+    RecordEvents( scene_one, "output" )
+    scene_one
 end
 
 # ╔═╡ cad146a0-13c7-11eb-03c0-1b75b17f3cb4
@@ -150,29 +181,31 @@ around the maximum likelihood parameters decreases as more data is used
 "
 
 # ╔═╡ 0fe7a234-144f-11eb-281f-c948380d945c
-@bind nPoints html"5<input type='range' min=5 max=30>30"
-
-# ╔═╡ 16206690-13d7-11eb-1531-85b5d8ba973a
-data = [ rand([true,false],2) for _ ∈ 1:nPoints ]
-
-# ╔═╡ 2466fa5c-13d7-11eb-31c5-c59659cf807a
-θstar = sum(data) / length(data)
+begin
+	nPoints = JSServe.Slider(5:50)
+	JSServe.with_session() do s, r
+		return DOM.div(nPoints, nPoints.value)
+	end
+end
 
 # ╔═╡ ac667340-13bb-11eb-3bbb-2d7875c3598f
 begin
-	plot(size=(400,450), ticks=[], ylabel=L"\theta_2", xlabel=L"\theta_1",
-		title=L"L(\theta)")
+	scene, layout = layoutscene(resolution = (500,550))
+	ax = layout[1,1] = LAxis(scene,
+		ylabel="θ[2]", xlabel="θ[1]", title="L(θ)")
 	
-	function L(θ1,θ2)
-		θ = copy(θstar)
-		θ[1],θ[2] = θ1,θ2
+	data = @lift([ rand([true,false],2) for _ ∈ 1:$nPoints ])
+	θstar = @lift( transpose( sum($data) / length($data) ) )
+	
+	heatmap!( ax, θrange, θrange,
+		@lift([ likelihood([x,y],$data) for x in θrange, y in θrange]),
 
-		return likelihood( θ, data )
-	end
-	
-	contourf!( θrange , θrange, L, colorbar=false )
-	scatter!( [θstar[1]], [θstar[2]], color=:red, marker=:diamond,
-		label="Analytical Optimum" )
+		colormap=cgrad(:starrynight, 10, categorical=true),
+		interpolate=true )
+
+	scatter!( ax, θstar, color=:white, marker=:diamond)
+    RecordEvents( scene, "output" )
+    scene
 end
 
 # ╔═╡ Cell order:
@@ -199,6 +232,4 @@ end
 # ╟─33d36578-13d4-11eb-28ae-fd8cb25224cb
 # ╟─38b34190-1450-11eb-1c4d-c738d3feed5e
 # ╟─0fe7a234-144f-11eb-281f-c948380d945c
-# ╟─16206690-13d7-11eb-1531-85b5d8ba973a
-# ╠═2466fa5c-13d7-11eb-31c5-c59659cf807a
 # ╟─ac667340-13bb-11eb-3bbb-2d7875c3598f
