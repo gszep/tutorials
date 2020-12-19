@@ -67,7 +67,7 @@ begin
 	scene_one, layout_one = layoutscene(resolution = (700,750))
 	
 	ax1 = layout_one[1,1] = LAxis(scene_one, ylabel="θ[2]", xlabel="θ[1]",
-		title="X=(0,1)")
+		title="X=(0,1)", panlock = true, zoomlock = true)
 	
 	heatmap!( ax1, θrange, θrange,
 		[ model([false,true], [θ1,θ2]) for θ1 in θrange, θ2 in θrange],
@@ -76,7 +76,7 @@ begin
 		interpolate=true )
 	
 	ax2 = layout_one[1,2] = LAxis(scene_one, ylabel="θ[2]", xlabel="θ[1]",
-		title="X=(1,1)")
+		title="X=(1,1)", panlock = true, zoomlock = true)
 	
 	heatmap!( ax2, θrange, θrange,
 		[ model([true,true], [θ1,θ2]) for θ1 in θrange, θ2 in θrange],
@@ -85,7 +85,7 @@ begin
 		interpolate=true )
 	
 	ax3 = layout_one[2,1] = LAxis(scene_one, ylabel="θ[2]", xlabel="θ[1]",
-		title="X=(0,0)")
+		title="X=(0,0)", panlock = true, zoomlock = true)
 	
 	heatmap!( ax3, θrange, θrange,
 		[ model([false,false], [θ1,θ2]) for θ1 in θrange, θ2 in θrange],
@@ -94,7 +94,7 @@ begin
 		interpolate=true )
 	
 	ax4 = layout_one[2,2] = LAxis(scene_one, ylabel="θ[2]", xlabel="θ[1]",
-		title="X=(1,0)")
+		title="X=(1,0)", panlock = true, zoomlock = true)
 	
 	heatmap!( ax4, θrange, θrange,
 		[ model([true,false], [θ1,θ2]) for θ1 in θrange, θ2 in θrange],
@@ -191,7 +191,7 @@ end
 # ╔═╡ ac667340-13bb-11eb-3bbb-2d7875c3598f
 begin
 	scene, layout = layoutscene(resolution = (500,550))
-	ax = layout[1,1] = LAxis(scene,
+	ax = layout[1,1] = LAxis(scene, panlock = true, zoomlock = true,
 		ylabel="θ[2]", xlabel="θ[1]", title="L(θ)")
 	
 	data = @lift([ rand([true,false],2) for _ ∈ 1:$nPoints ])
