@@ -11,6 +11,7 @@ begin
 
 	using AbstractPlotting.MakieLayout
 	using WGLMakie,AbstractPlotting
+	AbstractPlotting.inline!(true)
 	
 	using JSServe,JSServe.DOM
 	using LaTeXStrings

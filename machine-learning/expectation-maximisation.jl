@@ -13,7 +13,8 @@ begin
 	using LinearAlgebra
 	
 	using AbstractPlotting.MakieLayout
-    using WGLMakie,AbstractPlotting
+	using WGLMakie,AbstractPlotting
+	AbstractPlotting.inline!(true)
 
 	md"""## Expectation Maximisation
 	We shall demonstrate the expectation-maximisation algorithm on the gaussian
@@ -147,12 +148,11 @@ begin
 	scatter!( ax, map( (x,y) -> Point(x,y), data.eruptions, data.waiting),
 		markersize=3, color=:gold)
 	
-	x = scene.events.mouseposition
+	x = ax.scene.events.mouseposition
 	scatter!( ax, @lift( Point($x)/500 ),
 		markersize=20, color=:gold)
 	
-	scene.events.mouseposition
-	
+	controls = cameracontrols(ax.scene)
     RecordEvents( scene, "output" )
     scene
 end
@@ -173,6 +173,9 @@ However in practice we are not given dataset ``\mathbf{Z}`` so the best thing we
 
 Let's look at this posterior for the old faithful dataset which has dimensions ``N=2`` and seems to have ``K=2`` mixtures. We shall initialise a random ``\theta`` and plot the contours of marginal ``p(\mathbf{x}|\theta)``. We shall visualise the likelihood of each datum ``p(\mathbf{z}|\mathbf{x},\theta)`` as a colour
 """
+
+# ╔═╡ bb4729f8-4222-11eb-3944-f932ae581b97
+controls.zoombutton
 
 # ╔═╡ Cell order:
 # ╟─102fce2e-13b9-11eb-0da5-ab502c3ea430
@@ -195,3 +198,4 @@ Let's look at this posterior for the old faithful dataset which has dimensions `
 # ╠═b159cec8-408a-11eb-3728-0d266078dfa3
 # ╟─01ac872a-4113-11eb-1ffa-f3087641bcf6
 # ╠═ee8ca6b6-4121-11eb-2685-1bc42b156926
+# ╠═bb4729f8-4222-11eb-3944-f932ae581b97
