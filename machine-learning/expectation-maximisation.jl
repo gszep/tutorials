@@ -110,53 +110,6 @@ function marginal(x::Vector{<:Number},z::Vector{<:Bool},θ::NamedTuple)
 	return sum( k->joint(x, circshift(z,k) ,θ), 1:length(z) ) # over all possible z
 end
 
-# ╔═╡ ee8ca6b6-4121-11eb-2685-1bc42b156926
-begin
-	using CSV
-	data = CSV.File("data/old-faithful.tsv")
-	X = map( (x,y) -> [x,y], data.eruptions, data.waiting)
-	html"""<body oncontextmenu="return false;">"""
-	
-	θ = (
-		μ=[ [4.0,50.0], [2.5,80.0] ],
-		Σ=[ 10*Diagonal([1/30,1]), 10*Diagonal([1/30,10]) ],
-		π=[ 1/2, 1/2 ]
-	)
-	
-	scene, layout = layoutscene(resolution = (500,500))
-	ax = layout[1,1] = LScene(scene, camera=cam2d!,
-		panlock = true, zoomlock = true,
-		xlabel="Eruptions", ylabel="Waiting")
-	
-	xs = range(extrema(data.eruptions)..., length=100)
-	ys = range(extrema(data.waiting)..., length=100)
-	
-# 	contour!( ax, xs, ys,
-# 		[ log(posterior([x,y],[true,false],θ)) for x in xs, y in ys],
-# 		label="" )
-	
-# 	contour!( ax, xs, ys,
-# 		[ log(posterior([x,y],[false,true],θ)) for x in xs, y in ys],
-# 		label="" )
-	
-	heatmap!( ax, xs, ys,
-		[ marginal([x,y],[false,true],θ) for x in xs, y in ys],
-		
-		colormap=cgrad(:starrynight, 10, categorical=true),
-		interpolate=true )
-	
-	scatter!( ax, map( (x,y) -> Point(x,y), data.eruptions, data.waiting),
-		markersize=3, color=:gold)
-	
-	x = ax.scene.events.mouseposition
-	scatter!( ax, @lift( Point($x)/500 ),
-		markersize=20, color=:gold)
-	
-	controls = cameracontrols(ax.scene)
-    RecordEvents( scene, "output" )
-    scene
-end
-
 # ╔═╡ 786906c2-4078-11eb-1a98-77134f10075d
 function posterior(x::Vector{<:Number},z::Vector{<:Bool},θ::NamedTuple)
 	return joint(x,z,θ) / marginal(x,z,θ)
@@ -167,15 +120,67 @@ function posterior(X::Vector{<:Vector},Z::Vector{<:Vector},θ::NamedTuple)
 	return exp( sum( log.( posterior.(X,Z,Ref(θ)) ) ) )
 end
 
+# ╔═╡ ee8ca6b6-4121-11eb-2685-1bc42b156926
+begin
+	using CSV ##################################### data import
+	data = CSV.File("data/old-faithful.tsv",type=Float64)
+	data.waiting .= data.waiting/10.0
+	
+	xs = range(extrema(data.eruptions)..., length=100)
+	ys = range(extrema(data.waiting)..., length=100)
+	
+	###################################################### scene construction
+	scene, layout = layoutscene(resolution = (500,500))
+	ax = layout[1,1] = LAxis(scene,
+		
+		xpanlock = true, xzoomlock = true,
+		ypanlock = true, yzoomlock = true,
+		
+		xlabel="Eruptions", ylabel="Waiting")
+
+	empty!(scene.events.mousedrag.listeners)
+	mouseevents = addmouseevents!(ax.scene)
+
+	######################################################### model parameters
+	μ₁,μ₂= Node([4.0,5.0]), Node([2.5,8.0])
+	θ = @lift((
+		μ=[ $μ₁, $μ₂ ], π=[ 1/2, 1/2 ],
+		Σ=[ Diagonal([1/3,1/3]), Diagonal([1/3,1/3]) ],
+	))
+	
+	############################################################ marginal
+	density = @lift([ marginal([x,y],[false,true],$θ) for x in xs, y in ys])
+	heatmap!( ax, xs, ys, density,
+
+		colormap=cgrad(:starrynight, 10, categorical=true),
+		interpolate=true )
+	
+	############################################################# posterior
+	boundary = @lift([ posterior([x,y],[false,true],$θ) for x in xs, y in ys])
+	contour!( ax, xs, ys, boundary, colormap=:grays, levels=[1/4,1/2,3/4] )
+	
+	scatter!( ax, map( (x,y) -> Point(x,y), data.eruptions, data.waiting),
+		markersize=@lift( map( (x,y) -> 5posterior([x,y],[false,true],$θ), 
+				data.eruptions, data.waiting )), color=:gold )
+	
+	scatter!( ax, map( (x,y) -> Point(x,y), data.eruptions, data.waiting),
+		markersize=@lift( map( (x,y) -> 5posterior([x,y],[true,false],$θ), 
+				data.eruptions, data.waiting )), color=:white )
+	
+	###################################################### bind mouse events
+	onmouseleftdown(mouseevents) do event μ₁[] = event.data end
+	onmouserightdown(mouseevents) do event μ₂[] = event.data end
+	
+    RecordEvents( scene, "output" )
+    scene
+end
+
 # ╔═╡ 01ac872a-4113-11eb-1ffa-f3087641bcf6
 md"""
 However in practice we are not given dataset ``\mathbf{Z}`` so the best thing we can do estimate what the probability of observing ``\mathbf{z}`` is given that we know ``\mathbf{x}``. This is precisely what we do in the expectation step, when we evaluate the posterior likelihood ``p(\mathbf{Z}|\mathbf{X},\theta)``
 
 Let's look at this posterior for the old faithful dataset which has dimensions ``N=2`` and seems to have ``K=2`` mixtures. We shall initialise a random ``\theta`` and plot the contours of marginal ``p(\mathbf{x}|\theta)``. We shall visualise the likelihood of each datum ``p(\mathbf{z}|\mathbf{x},\theta)`` as a colour
 """
-
-# ╔═╡ bb4729f8-4222-11eb-3944-f932ae581b97
-controls.zoombutton
 
 # ╔═╡ Cell order:
 # ╟─102fce2e-13b9-11eb-0da5-ab502c3ea430
@@ -197,5 +202,4 @@ controls.zoombutton
 # ╠═0f49f918-4090-11eb-3865-1771ff1ecb70
 # ╠═b159cec8-408a-11eb-3728-0d266078dfa3
 # ╟─01ac872a-4113-11eb-1ffa-f3087641bcf6
-# ╠═ee8ca6b6-4121-11eb-2685-1bc42b156926
-# ╠═bb4729f8-4222-11eb-3944-f932ae581b97
+# ╟─ee8ca6b6-4121-11eb-2685-1bc42b156926
