@@ -1,9 +1,9 @@
 # tutorials
-Setup the local julia environment
+Setup the local julia environment from shell
 ```shell
 julia setup.jl
 ```
-then run `Pluto.jl` with the local environment
+then run julia and
 ```julia
 ] activate .
 using Pluto
