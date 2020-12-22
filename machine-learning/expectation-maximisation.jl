@@ -8,15 +8,18 @@ using InteractiveUtils
 begin 
 	import Pkg
 	Pkg.activate("..")
+	Pkg.instantiate()
 	
 	using LaTeXStrings,Parameters
 	using LinearAlgebra
 	using Zygote
 	
-	using AbstractPlotting.MakieLayout
 	using WGLMakie,AbstractPlotting
 	AbstractPlotting.inline!(true)
+	using AbstractPlotting.MakieLayout
+end
 
+# ╔═╡ 9114bea2-4373-11eb-3780-53292d278b2d
 	md"""## Expectation Maximisation
 	We shall demonstrate the expectation-maximisation algorithm on the gaussian
 	mixture model ``p(\mathbf{x}|\mathbf{\theta})`` where parameters we want to 
@@ -25,7 +28,6 @@ begin
 	means ``\mu_k`` covariance matrices ``\Sigma_k`` and weight ``\pi_k`` for each mixture. The model 
 	is written as
 	"""
-end
 
 # ╔═╡ 9461a482-4060-11eb-2fd4-07e25338c86c
 L"""
@@ -306,6 +308,7 @@ Furthermore we are not limited the gaussian mixtures and can consider more compl
 
 # ╔═╡ Cell order:
 # ╟─102fce2e-13b9-11eb-0da5-ab502c3ea430
+# ╟─9114bea2-4373-11eb-3780-53292d278b2d
 # ╟─9461a482-4060-11eb-2fd4-07e25338c86c
 # ╠═97e8d860-410e-11eb-2fd5-8de2aee692b0
 # ╟─a4935164-4062-11eb-3f47-0b92eaa966e9

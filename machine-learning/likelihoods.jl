@@ -8,6 +8,7 @@ using InteractiveUtils
 begin 
 	import Pkg
 	Pkg.activate("..")
+	Pkg.instantiate()
 
 	using AbstractPlotting.MakieLayout
 	using WGLMakie,AbstractPlotting
@@ -15,7 +16,9 @@ begin
 	
 	using JSServe,JSServe.DOM
 	using LaTeXStrings
+end
 
+# ╔═╡ d1028806-4372-11eb-04f3-a9da19d70fb9
 	md"""## Optimisation of Likelihood Functions
 	We begin by defining the probability density that will model our data
 	``p(\mathbf{x}|\mathbf{\theta})``. Our data ``\mathcal{D} = \{ X_1 \dots X_k \}`` 
@@ -26,7 +29,6 @@ begin
 	interval to ensure the normalisation of ``p(\mathbf{x}|\mathbf{\theta})`` with 
 	respect to  ``\mathbf{x}``
 	"""
-end
 
 # ╔═╡ 13578900-13d9-11eb-183a-793180b48614
 θrange = range(0,1,length=50)
@@ -211,6 +213,7 @@ end
 
 # ╔═╡ Cell order:
 # ╟─102fce2e-13b9-11eb-0da5-ab502c3ea430
+# ╟─d1028806-4372-11eb-04f3-a9da19d70fb9
 # ╠═13578900-13d9-11eb-183a-793180b48614
 # ╟─d44a80be-13d6-11eb-2a8e-2da04ecfbc01
 # ╠═78229810-13b7-11eb-292a-e78eec461658
