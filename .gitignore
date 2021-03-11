@@ -1,3 +1,5 @@
 .*
 !.gitignore
 Manifest.toml
+machine-learning/data/cifar-10-batches-py
+machine-learning/data/cifar-10-python.tar.gz
